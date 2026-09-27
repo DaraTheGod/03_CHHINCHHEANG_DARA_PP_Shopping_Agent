@@ -15,18 +15,20 @@ from schemas import (
     EditProductInput,
     GetOrderDetailsInput,
     GetProductDetailsInput,
+    ListInStockProductsInput,
     ListOrdersInput,
     SearchProductsInput,
     TOOL_SCHEMAS,
 )
 from tools import (
     add_product, buy_product, check_stock, delete_product, edit_product,
-    get_order_details, get_product_details, list_orders, search_products,
+    get_order_details, get_product_details, list_in_stock_products, list_orders, search_products,
 )
 
 
 TOOL_REGISTRY = {
     "search_products": search_products,
+    "list_in_stock_products": list_in_stock_products,
     "check_stock": check_stock,
     "get_product_details": get_product_details,
     "buy_product": buy_product,
@@ -39,6 +41,8 @@ TOOL_REGISTRY = {
 
 SYSTEM_PROMPT = """You are a careful shopping assistant.
 Use tools when the user's request needs catalog or stock information.
+When the user asks for all products currently in stock, use list_in_stock_products directly.
+When the user asks whether a product is in stock, always call check_stock for each relevant candidate before answering.
 After observing a tool result, decide whether another tool is needed.
 Never invent product data. Explain controlled tool errors clearly.
 When reporting prices, quantities, totals, or stock, copy the exact values from the latest tool result.
@@ -126,6 +130,8 @@ class ShoppingAgent:
                 raise ValueError
             if tool_name == "search_products":
                 return SearchProductsInput(query=arguments.get("query", ""))
+            if tool_name == "list_in_stock_products":
+                return ListInStockProductsInput()
             if tool_name == "check_stock":
                 return CheckStockInput(product_id=arguments.get("product_id", 0))
             if tool_name == "get_product_details":

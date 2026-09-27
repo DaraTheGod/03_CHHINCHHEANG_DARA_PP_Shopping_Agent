@@ -22,6 +22,19 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "list_in_stock_products",
+            "description": "List every active product with stock greater than zero. Use this when the user asks which products are currently in stock.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": False,
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "check_stock",
             "description": "Check the current stock for a product ID returned by search_products.",
             "parameters": {
@@ -151,6 +164,11 @@ TOOL_SCHEMAS = [
 @dataclass(frozen=True)
 class SearchProductsInput:
     query: str
+
+
+@dataclass(frozen=True)
+class ListInStockProductsInput:
+    pass
 
 
 @dataclass(frozen=True)

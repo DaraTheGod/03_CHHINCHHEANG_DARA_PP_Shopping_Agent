@@ -6,11 +6,11 @@ from collections.abc import Callable
 PERMISSIONS = {
     "customer": {
         "search_products", "check_stock", "get_product_details", "buy_product",
-        "get_order_details", "list_orders",
+        "list_in_stock_products", "get_order_details", "list_orders",
     },
     "admin": {
         "search_products", "check_stock", "get_product_details", "buy_product",
-        "get_order_details", "list_orders",
+        "list_in_stock_products", "get_order_details", "list_orders",
         "add_product", "edit_product", "delete_product",
     },
 }

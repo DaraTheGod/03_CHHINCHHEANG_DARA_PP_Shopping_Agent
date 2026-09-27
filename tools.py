@@ -11,6 +11,7 @@ from schemas import (
     EditProductInput,
     GetOrderDetailsInput,
     GetProductDetailsInput,
+    ListInStockProductsInput,
     ListOrdersInput,
     SearchProductsInput,
 )
@@ -48,13 +49,31 @@ def search_products(arguments: SearchProductsInput) -> dict:
         with get_connection() as connection:
             rows = connection.execute(
                 """
-                SELECT p.id, p.name, c.name AS category, p.price, p.stock
+                SELECT p.id, p.name, c.name AS category, p.price
                 FROM products p
                 JOIN categories c ON c.id = p.category_id
                 WHERE p.active = 1 AND (lower(p.name) LIKE ? OR lower(c.name) LIKE ?)
                 ORDER BY p.id
                 """,
                 (f"%{query}%", f"%{query}%"),
+            ).fetchall()
+        return {"ok": True, "products": [dict(row) for row in rows]}
+    except sqlite3.Error:
+        return {"ok": False, "error": "CATALOG_READ_ERROR"}
+
+
+def list_in_stock_products(arguments: ListInStockProductsInput) -> dict:
+    """Return every active product that currently has stock."""
+    try:
+        with get_connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT p.id, p.name, c.name AS category, p.price, p.stock
+                FROM products p
+                JOIN categories c ON c.id = p.category_id
+                WHERE p.active = 1 AND p.stock > 0
+                ORDER BY p.id
+                """
             ).fetchall()
         return {"ok": True, "products": [dict(row) for row in rows]}
     except sqlite3.Error:

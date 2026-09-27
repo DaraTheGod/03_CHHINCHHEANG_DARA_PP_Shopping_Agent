@@ -1,5 +1,7 @@
 # Safe Shopping Agent
 
+## 1. Project Overview
+
 A small Topic 07 agent powered by the local Ollama model `qwen3.5:4b`. The model chooses tools, the application checks permissions, the tools query or update SQLite, and the result returns to the model.
 
 ## Quick Start
@@ -46,7 +48,7 @@ If the virtual environment is not activated, use the interpreter directly:
 .\.venv\Scripts\python.exe main.py
 ```
 
-## What The Agent Does
+## 3. Agent Loop
 
 ```text
 User request
@@ -80,25 +82,26 @@ db/data.sql         seed categories, products, and historical orders
 init_database.py    creates or resets the database
 ```
 
-## Tools
+## 2. Available Tools
 
-There are **9 tools**:
+There are **10 tools**:
 
-| Tool                  | Input                                | Purpose                               |
-| --------------------- | ------------------------------------ | ------------------------------------- |
-| `search_products`     | `query`                              | Search products by name or category.  |
-| `check_stock`         | `product_id`                         | Check current stock for one product.  |
-| `get_product_details` | `product_id`                         | Show complete product information.    |
-| `buy_product`         | `product_id`, `quantity`             | Create an order and reduce stock.     |
-| `get_order_details`   | `order_id`                           | Show one order and its line items.    |
-| `list_orders`         | none                                 | Show all orders for Default Customer. |
-| `add_product`         | `name`, `category`, `price`, `stock` | Add a product. Admin only.            |
-| `edit_product`        | `product_id` plus fields to change   | Edit a product. Admin only.           |
-| `delete_product`      | `product_id`                         | Archive a product. Admin only.        |
+| Tool                     | Input                                | Purpose                               |
+| ------------------------ | ------------------------------------ | ------------------------------------- |
+| `search_products`        | `query`                              | Search products by name or category.  |
+| `list_in_stock_products` | none                                 | List every active product with stock. |
+| `check_stock`            | `product_id`                         | Check current stock for one product.  |
+| `get_product_details`    | `product_id`                         | Show complete product information.    |
+| `buy_product`            | `product_id`, `quantity`             | Create an order and reduce stock.     |
+| `get_order_details`      | `order_id`                           | Show one order and its line items.    |
+| `list_orders`            | none                                 | Show all orders for Default Customer. |
+| `add_product`            | `name`, `category`, `price`, `stock` | Add a product. Admin only.            |
+| `edit_product`           | `product_id` plus fields to change   | Edit a product. Admin only.           |
+| `delete_product`         | `product_id`                         | Archive a product. Admin only.        |
 
 Tool schemas are in `schemas.py`. Tool implementations are in `tools.py`. The model registration is in `agent.py`.
 
-## Roles And Permissions
+## 4. Permission Rule
 
 Permissions are enforced in `harness.py` before a tool runs.
 
@@ -108,6 +111,43 @@ Permissions are enforced in `harness.py` before a tool runs.
 | `admin`    | All customer actions, plus add, edit, and archive products.              |
 
 Customers attempting `add_product`, `edit_product`, or `delete_product` receive `PERMISSION_DENIED`.
+
+## 5. Safety
+
+- Tool inputs use explicit structured schemas in `schemas.py`.
+- Empty searches, invalid product/order IDs, non-positive quantities, negative prices/stock, duplicate names, and empty updates are rejected.
+- Database failures return controlled error results instead of raw exceptions.
+- The tool registry is an allowlist, and the permission harness runs before every tool.
+- Customers cannot add, edit, or archive products; the rule is enforced in `harness.py`.
+- A purchase validates stock, creates an order and order item, saves the price, and reduces stock in one database transaction.
+- Product deletion archives the product so historical order items remain valid.
+- The model can make at most 5 tool calls for one request.
+
+## 6. Example Run
+
+Input:
+
+```text
+Role (customer/admin): customer
+Request (or 'exit'): Find a laptop that is currently in stock
+```
+
+Model-selected tool calls and observations:
+
+```text
+[1] TOOL CALL search_products
+    Arguments: {"query": "laptop"}
+    Observation: candidates Laptop Pro 14 (id 1) and Laptop Air 13 (id 2)
+
+[2] TOOL CALL check_stock
+    Arguments: {"product_id": 1}
+    Observation: {"stock": 12, "in_stock": true}
+
+FINAL ANSWER
+Laptop Pro 14 is in stock at $999.99 with 12 units available.
+```
+
+The complete formatted output is saved in `terminal_output.txt`.
 
 ## Recommended Tests
 
