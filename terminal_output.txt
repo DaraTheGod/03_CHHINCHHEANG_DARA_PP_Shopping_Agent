@@ -1,0 +1,60 @@
+================================================================
+                 SAFE SHOPPING AGENT
+================================================================
+Local model + permission-controlled tools
+
+Role options: customer, admin
+Role (customer/admin): customer
+Request (or 'exit'): Find a laptop that is currently in stock
+
+SESSION
+----------------------------------------------------------------
+Model:   qwen3.5:4b
+Role:    customer
+Request: Find a laptop that is currently in stock
+
+AGENT TRACE
+----------------------------------------------------------------
+[1] TOOL CALL  search_products
+    Arguments: {
+  "query": "laptop"
+}
+    Result:    OK
+    Observation: {
+  "ok": true,
+  "products": [
+    {
+      "id": 1,
+      "name": "Laptop Pro 14",
+      "category": "Laptops",
+      "price": 999.99,
+      "stock": 12
+    },
+    {
+      "id": 2,
+      "name": "Laptop Air 13",
+      "category": "Laptops",
+      "price": 799.99,
+      "stock": 8
+    }
+  ]
+}
+
+[2] TOOL CALL  check_stock
+    Arguments: {
+  "product_id": 1
+}
+    Result:    OK
+    Observation: {
+  "ok": true,
+  "product_id": 1,
+  "product_name": "Laptop Pro 14",
+  "stock": 12,
+  "in_stock": true
+}
+
+FINAL ANSWER
+----------------------------------------------------------------
+Two laptops are currently in stock:
+Laptop Pro 14: $999.99, 12 available.
+Laptop Air 13: $799.99, 8 available.
